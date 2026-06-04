@@ -1,0 +1,47 @@
+name: Terraform validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path:
+          - .
+          - examples/minimal
+          - examples/complete
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.9.0
+
+      - name: Terraform fmt
+        if: matrix.path == '.'
+        run: terraform fmt -check -recursive
+        working-directory: ${{ github.workspace }}
+
+      - name: Static stability checks
+        if: matrix.path == '.'
+        run: bash tests/static_checks.sh
+        working-directory: ${{ github.workspace }}
+
+      - name: Terraform init
+        run: terraform init -backend=false
+        working-directory: ${{ github.workspace }}/${{ matrix.path }}
+
+      - name: Terraform validate
+        run: terraform validate
+        working-directory: ${{ github.workspace }}/${{ matrix.path }}
