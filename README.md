@@ -48,6 +48,9 @@ module "wireguard_vpn" {
       cidrs  = ["10.0.0.0/16", "10.1.0.0/16"]
     },
   ]
+
+  # Required — use the narrowest CIDRs possible (/32 per host). Only IPs that run terraform apply.
+  ssh_allowed_cidr_blocks = ["203.0.113.10/32"]
 }
 ```
 
@@ -64,6 +67,7 @@ module "wireguard_vpn" {
 **Operational requirements:**
 
 - The machine running `terraform apply` must reach the instance on **TCP 22** (config sync provisioners) unless `enable_config_sync = false`
+- Set `ssh_allowed_cidr_blocks` to the **smallest possible** CIDRs (`/32` per apply host). Avoid `0.0.0.0/0` and wide office ranges unless unavoidable
 - `vpn_cidr` must not overlap your VPC CIDR
 - Use **encrypted remote state** (e.g. S3 + KMS) — WireGuard private keys and SSH keys are stored in state
 
@@ -155,9 +159,24 @@ terraform output -raw ssh_private_key_pem > vpn.pem && chmod 600 vpn.pem
 ssh -i vpn.pem ec2-user@$(terraform output -raw public_ip)
 ```
 
-Port 22 defaults to `0.0.0.0/0` so `terraform apply` can reach the instance from your laptop or CI. Restrict `ssh_allowed_cidr_blocks` in production.
+`ssh_allowed_cidr_blocks` is **required** (no default). It controls who can reach **TCP 22** on the VPN instance (config sync and manual SSH).
 
-Set `enable_ssh_key = false` only if `enable_config_sync = false` (provisioners require SSH).
+> **Use the most restrictive CIDRs you can.** Prefer one `/32` per known host (your laptop, a fixed CI runner). Do **not** use `0.0.0.0/0` in production — that exposes SSH to the entire internet. Avoid `/24` or larger unless every address in that range should have shell access to the VPN box.
+
+```hcl
+# Good — single apply host
+ssh_allowed_cidr_blocks = ["203.0.113.10/32"]
+
+# OK — laptop + one CI runner (still narrow)
+ssh_allowed_cidr_blocks = ["203.0.113.10/32", "198.51.100.5/32"]
+
+# Bad for production — open SSH worldwide
+# ssh_allowed_cidr_blocks = ["0.0.0.0/0"]
+```
+
+Include every IP that runs `terraform apply`; otherwise config sync cannot push peers. Update the list when your IP or CI egress changes.
+
+Set `enable_ssh_key = false` only if `enable_config_sync = false` (provisioners require SSH). In that case use `ssh_allowed_cidr_blocks = []`.
 
 ## Split-tunnel vs full-tunnel
 
@@ -194,7 +213,7 @@ dns_static_hosts = {
 
 - WireGuard UDP port is open to `0.0.0.0/0` by default (required for remote clients)
 - **All private keys** (WireGuard + SSH) are in Terraform state — treat state as highly sensitive
-- Restrict `ssh_allowed_cidr_blocks` when possible
+- `ssh_allowed_cidr_blocks` has no default — **use `/32` (single IP) wherever possible**; never use `0.0.0.0/0` in production
 - VPN traffic is NATted to the server's **private IP** inside the VPC
 
 ## Inputs
@@ -212,7 +231,7 @@ dns_static_hosts = {
 | `ami_id` | AMI ID (null = latest AL2023) | `string` | `null` | no |
 | `root_volume_size` | Root volume GB | `number` | `30` | no |
 | `enable_ssh_key` | Generate SSH key for instance and provisioners | `bool` | `true` | no |
-| `ssh_allowed_cidr_blocks` | CIDRs allowed to SSH (TCP 22) | `list(string)` | `["0.0.0.0/0"]` | no |
+| `ssh_allowed_cidr_blocks` | CIDRs allowed to SSH (TCP 22); non-empty when `enable_ssh_key` is true. **Use `/32` per apply host; avoid broad CIDRs** | `list(string)` | — | yes |
 | `enable_config_sync` | Push peer/iptables/dns changes over SSH | `bool` | `true` | no |
 | `ssh_user` | SSH user for provisioners | `string` | `ec2-user` | no |
 | `tags` | Tags for all resources | `map(string)` | `{}` | no |

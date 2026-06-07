@@ -20,6 +20,11 @@ variable "subnet_id" {
   type        = string
 }
 
+variable "ssh_allowed_cidr_blocks" {
+  description = "CIDRs allowed to SSH (must include terraform apply source IP). Prefer /32 per host; avoid 0.0.0.0/0."
+  type        = list(string)
+}
+
 variable "tags" {
   description = "Tags applied to VPN resources"
   type        = map(string)

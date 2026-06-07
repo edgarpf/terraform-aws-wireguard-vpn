@@ -92,9 +92,17 @@ variable "enable_ssh_key" {
 }
 
 variable "ssh_allowed_cidr_blocks" {
-  description = "CIDR blocks allowed to SSH into the VPN instance (TCP 22). Must include the machine running terraform apply so wg_config_sync can reach the instance."
+  description = <<-EOT
+    CIDR blocks allowed to SSH into the VPN instance (TCP 22). Required when enable_ssh_key is true.
+    Must include every IP that runs terraform apply (laptop, CI runner). Use [] only when enable_ssh_key is false.
+    Use the most restrictive CIDRs possible (/32 for a single host). Do not use 0.0.0.0/0 or broad ranges in production.
+  EOT
   type        = list(string)
-  default     = ["0.0.0.0/0"]
+
+  validation {
+    condition     = !var.enable_ssh_key || length(var.ssh_allowed_cidr_blocks) > 0
+    error_message = "ssh_allowed_cidr_blocks must be non-empty when enable_ssh_key is true (include your terraform apply source IP or CI CIDR)."
+  }
 }
 
 variable "enable_config_sync" {

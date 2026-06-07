@@ -27,5 +27,7 @@ module "wireguard_vpn" {
     },
   ]
 
+  ssh_allowed_cidr_blocks = var.ssh_allowed_cidr_blocks
+
   tags = var.tags
 }
