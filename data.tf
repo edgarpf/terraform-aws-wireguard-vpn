@@ -1,3 +1,7 @@
+data "aws_subnet" "vpn" {
+  id = var.subnet_id
+}
+
 data "aws_ami" "amazon_linux_2023" {
   count = var.ami_id == null ? 1 : 0
 

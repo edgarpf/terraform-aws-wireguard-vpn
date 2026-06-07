@@ -17,7 +17,6 @@ module "wireguard_vpn" {
   source = "../.."
 
   name      = var.name
-  vpc_id    = var.vpc_id
   subnet_id = var.subnet_id
 
   users = [

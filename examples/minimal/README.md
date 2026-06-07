@@ -4,7 +4,6 @@ Deploys a WireGuard VPN with a single user. Supply an existing VPC and public su
 
 ```hcl
 # terraform.tfvars
-vpc_id    = "vpc-0123456789abcdef0"
 vpc_cidr  = "10.0.0.0/16"
 subnet_id = "subnet-0123456789abcdef0"
 ```

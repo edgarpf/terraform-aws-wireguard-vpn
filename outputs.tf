@@ -20,6 +20,11 @@ output "security_group_id" {
   value       = aws_security_group.vpn.id
 }
 
+output "vpc_id" {
+  description = "VPC ID derived from subnet_id"
+  value       = data.aws_subnet.vpn.vpc_id
+}
+
 # ── Network ────────────────────────────────────────────────────────────────────
 
 output "vpn_cidr" {

@@ -3,7 +3,7 @@
 resource "aws_security_group" "vpn" {
   name        = "${var.name}-vpn"
   description = "WireGuard VPN server"
-  vpc_id      = var.vpc_id
+  vpc_id      = data.aws_subnet.vpn.vpc_id
 
   tags = merge(var.tags, {
     Name = "${var.name}-vpn"

@@ -5,7 +5,6 @@ Multi-user VPN with per-user CIDRs, a suspended user (`cidrs = []`), and static 
 ```bash
 terraform init
 terraform apply \
-  -var="vpc_id=vpc-0123456789abcdef0" \
   -var="vpc_cidr=10.0.0.0/16" \
   -var="subnet_id=subnet-0123456789abcdef0"
 

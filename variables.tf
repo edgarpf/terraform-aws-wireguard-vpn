@@ -34,11 +34,6 @@ variable "users" {
 
 # ── Network ─────────────────────────────────────────────────────────────────────
 
-variable "vpc_id" {
-  description = "ID of the VPC where the VPN instance will be launched"
-  type        = string
-}
-
 variable "subnet_id" {
   description = "ID of a public subnet where the VPN instance will be launched"
   type        = string

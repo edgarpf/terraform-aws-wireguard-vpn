@@ -34,7 +34,6 @@ module "wireguard_vpn" {
   source = "github.com/<your-org>/terraform-aws-wireguard-vpn?ref=v1.0.0"
 
   name      = "corp-vpn"
-  vpc_id    = module.vpc.vpc_id
   subnet_id = module.vpc.public_subnets[0]
 
   users = [
@@ -100,9 +99,10 @@ This module creates the following resources.
 
 | Data source | Description |
 |-------------|-------------|
+| [`aws_subnet`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/subnet) | Looks up VPC ID from `subnet_id` |
 | [`aws_ami`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/ami) | Latest Amazon Linux 2023 AMI (when `ami_id` is `null`) |
 
-No other AWS services (VPC, subnets, Secrets Manager, etc.) are created — you supply `vpc_id` and `subnet_id`.
+No other AWS services (VPC, subnets, Secrets Manager, etc.) are created — you supply a public `subnet_id` (VPC is derived automatically).
 
 ## Adding and removing users
 
@@ -202,8 +202,7 @@ dns_static_hosts = {
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | `name` | Name prefix for resources | `string` | — | yes |
-| `vpc_id` | VPC ID | `string` | — | yes |
-| `subnet_id` | Public subnet ID | `string` | — | yes |
+| `subnet_id` | Public subnet ID (VPC is derived from this) | `string` | — | yes |
 | `users` | List of `{ name, offset, cidrs }` | `list(object)` | — | yes |
 | `vpn_cidr` | WireGuard tunnel subnet | `string` | `10.100.0.0/24` | no |
 | `listen_port` | WireGuard UDP port | `number` | `51820` | no |
@@ -226,6 +225,7 @@ dns_static_hosts = {
 | `public_ip` | Elastic IP (WireGuard endpoint) |
 | `private_ip` | Instance private IP in VPC |
 | `security_group_id` | VPN security group ID |
+| `vpc_id` | VPC ID (derived from `subnet_id`) |
 | `vpn_cidr` | WireGuard tunnel subnet |
 | `server_vpn_ip` | Server tunnel IP |
 | `user_vpn_ips` | Map of user → tunnel IP |

@@ -10,11 +10,6 @@ variable "name" {
   default     = "example-vpn"
 }
 
-variable "vpc_id" {
-  description = "VPC ID where the VPN will be deployed"
-  type        = string
-}
-
 variable "vpc_cidr" {
   description = "Primary VPC CIDR for split-tunnel AllowedIPs"
   type        = string
